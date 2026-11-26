@@ -1,0 +1,98 @@
+COUNTERPICK - versão local (fases 1.5 e 2)
+==========================================
+
+COMO ABRIR
+1. Dê dois cliques em INICIAR.bat.
+2. O navegador abre em http://localhost:5002
+3. Para desligar, feche a janela preta.
+Só este computador acessa (o servidor escuta em 127.0.0.1).
+
+
+DE ONDE VÊM OS DADOS (sem IA, sem gastar nada)
+- OP.GG oficial (servidor MCP do próprio OP.GG): força de cada campeão por rota,
+  build, runas e a taxa de vitória de cada confronto de rota. Todos os campeões,
+  todas as rotas.
+- Riot (Data Dragon): lista oficial de campeões, itens, runas e imagens do patch.
+- Riot (API com a sua chave, opcional): partidas de alto elo do servidor BR,
+  somadas aos confrontos.
+
+ATUALIZAÇÃO SOZINHA
+Toda vez que você abre o sistema, ele confere a versão do jogo. Se saiu patch
+novo, baixa tudo de novo em segundo plano (uns 8 a 10 minutos). Dá para usar
+enquanto isso; o andamento aparece no card "Servidor local".
+Botão "Atualizar dados do op.gg" força uma atualização na hora.
+
+
+COMO USAR NA PARTIDA
+- Rota + modo:
+  * Só minha lane: coloque só o oponente direto (campo vermelho).
+  * Comp inteira: coloque o time inimigo por rota.
+  * Draft: escolha seu lado e sua vez e coloque quem o inimigo já pegou.
+- "Já escolhi": coloque o seu campeão para ver só runas e build.
+  Com o oponente preenchido, a build vem do op.gg PARA AQUELE confronto,
+  com vantagem de lane e dica.
+- Perfil de amigo: "+ Adicionar op.gg" e cole o link do op.gg ou nome#TAG.
+
+
+CHAVE DA RIOT (fase 2, opcional)
+Este sistema usa uma PERSONAL API KEY aprovada pela Riot:
+ela NÃO EXPIRA. Não precisa renovar todo dia.
+1. https://developer.riotgames.com > LOGIN > seu nome > "Apps" > o app.
+2. A chave (RGAPI-...) fica no arquivo .env desta pasta:
+      RIOT_API_KEY=RGAPI-xxxxxxxx...
+3. No site, "Testar chave" e depois "Coletar 200 partidas da Riot".
+   Leva uns 4 a 5 minutos (limite: 20 pedidos/s e 100 a cada 2 min).
+
+IMPORTANTE
+- NUNCA mande a chave para ninguém (nem chat, print ou GitHub).
+- Se a chave vazar, na página do app clique em "NEW API KEY" e cole a nova no .env
+  (a antiga para de funcionar). O site lê o .env a cada pedido: não precisa reiniciar.
+- A Personal Key é para uso pessoal / grupo pequeno. Para abrir ao público ou
+  cobrar, é preciso pedir uma "Production Key" à Riot.
+
+SEGURANÇA (o que já está protegido)
+- Só este computador acessa o sistema (127.0.0.1). Ninguém da rede ou da internet.
+- O arquivo .env só pode ser lido pelo seu usuário do Windows.
+- A chave nunca vai para a página nem aparece nas respostas.
+- Outros sites abertos no navegador não conseguem usar o sistema (proteção contra
+  CSRF e DNS rebinding) e há limite de consultas por minuto para proteger a sua cota.
+- Se for ZIPAR esta pasta para mandar a alguém: APAGUE o .env da cópia antes
+  (ou deixe só o .env.exemplo). Cada pessoa usa a própria chave.
+
+MODO AMIGOS (só seus amigos, pela rede privada do Tailscale)
+O site continua no SEU PC. Ninguém da internet nem da sua rede de casa
+consegue abrir: só quem você convidar para a sua rede do Tailscale.
+
+No SEU computador (uma vez só):
+1. Baixe o Tailscale em https://tailscale.com/download (Windows) e instale.
+2. Entre com uma conta (Google, Microsoft ou GitHub).
+3. Abra o arquivo .env desta pasta e troque  COUNTERPICK_AMIGOS=0  por  =1
+4. Feche a janela preta e abra o INICIAR.bat de novo. A janela vai mostrar
+   o endereço para os amigos, algo como  http://nome-do-seu-pc:5002
+   (se o Windows perguntar sobre o Firewall, permita SÓ em "Rede privada").
+
+Para convidar um amigo:
+5. Painel do Tailscale (https://login.tailscale.com/admin/machines),
+   no seu PC clique em "..." > "Share" e mande o convite para o e-mail dele.
+   (Compartilhar SÓ o seu PC é mais seguro que convidar para a rede toda:
+   o amigo vê esta máquina e nada mais.)
+6. Mande para ele o arquivo PARA-OS-AMIGOS.txt.
+
+O que o amigo pode e não pode:
+- Pode: recomendar counters, avaliar a escolha dele, cadastrar o próprio perfil.
+- Não pode: coletar partidas, atualizar dados, testar a chave (só você, no seu PC).
+- Cada amigo tem um limite de consultas por minuto, para não gastar sua cota.
+- O site só funciona com o seu PC ligado e o INICIAR.bat aberto.
+- Quem acessou e quando fica em acessos.log (sem guardar o que a pessoa digitou).
+- Para tirar alguém: painel do Tailscale > "Share" > remover o acesso.
+- Para desligar o modo amigos: COUNTERPICK_AMIGOS=0 e reabra o INICIAR.bat.
+
+ARQUIVOS
+app.py           servidor (Flask)
+dados.py         banco local + atualização por patch
+opgg.py          conversa com o servidor oficial do OP.GG
+recomendar.py    cálculo dos counters (sem IA)
+riot.py          conversa com a API da Riot (respeita o limite)
+riot_coletor.py  coleta de partidas BR de todos os elos
+counterpick.db   banco de dados (criado sozinho)
+site/            a página

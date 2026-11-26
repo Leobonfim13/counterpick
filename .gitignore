@@ -1,0 +1,23 @@
+# chave da Riot — NUNCA vai para o GitHub (use .env.exemplo como modelo)
+.env
+.env.*
+!.env.exemplo
+# banco local, registro de quem acessou
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+acessos.log*
+*.log
+# rede privada (endereço do Tailscale, políticas) e prints reais com nomes de outros jogadores
+PARA-OS-AMIGOS.txt
+testes/tailscale-*.hujson
+testes/reais/
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.claude/
+Thumbs.db
+.DS_Store

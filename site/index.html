@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CounterPick</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one working column — profile, lane & mode, teams, your champion, result; system data folded at the end. */
+:root{
+  --bg:#eef1f5; --panel:#ffffff; --line:#d5dbe4; --fg:#141a24; --muted:#5d6878;
+  --accent:#0e8f8a; --accent-ink:#ffffff; --enemy:#c2414b; --enemy-soft:#fbe9ea;
+  --s:#0e8f8a; --a:#3b6fd6; --b:#8a6d1f; --chip:#e6ebf2; --warn-soft:#fff6dc;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c1118; --panel:#141b25; --line:#263243; --fg:#e6ecf4; --muted:#8a97a9;
+  --accent:#2cc4bc; --accent-ink:#04201f; --enemy:#ef6a73; --enemy-soft:#2a1519;
+  --s:#2cc4bc; --a:#6f9bf0; --b:#d2ad4f; --chip:#1d2733; --warn-soft:#2a2410; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c1118; --panel:#141b25; --line:#263243; --fg:#e6ecf4; --muted:#8a97a9;
+  --accent:#2cc4bc; --accent-ink:#04201f; --enemy:#ef6a73; --enemy-soft:#2a1519;
+  --s:#2cc4bc; --a:#6f9bf0; --b:#d2ad4f; --chip:#1d2733; --warn-soft:#2a2410; color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+img{max-width:100%}
+.wrap{max-width:880px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px}
+h1{font-family:var(--display);font-size:2.4rem;letter-spacing:.02em;margin:0;line-height:1}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:0;font-size:.9rem}
+.banner{padding:10px 14px;border-radius:8px;background:var(--warn-soft);border:1px solid var(--b);font-size:.88rem}
+h2{font-family:var(--display);font-size:1.15rem;text-transform:uppercase;letter-spacing:.08em;margin:0;color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px}
+.lanes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.lanes button{font-family:var(--display);font-size:1.05rem;letter-spacing:.04em;padding:10px 4px;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:8px;cursor:pointer}
+.lanes button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.modes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.modes button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--fg);font:inherit;cursor:pointer}
+.modes button b{font-family:var(--display);font-size:1.1rem;letter-spacing:.03em}
+.modes button small{color:var(--muted);font-size:.78rem}
+.modes button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.modes button[aria-pressed="true"] b{color:var(--accent)}
+.draft{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;padding:12px;border:1px dashed var(--line);border-radius:8px}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:.85rem;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--chip);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.draft-info{margin:0;font-size:.85rem;flex-basis:100%}
+.draft-info b{color:var(--accent)}
+.team{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.team.lane-only .slot:not(.opp){display:none}
+.team.lane-only{grid-template-columns:minmax(0,280px)}
+.slot{display:flex;flex-direction:column;gap:4px;min-width:0}
+.slot label{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot.opp label{color:var(--enemy);font-weight:700}
+.slot.opp input{border-color:var(--enemy);background:var(--enemy-soft)}
+.team.draft-mode .slot label{color:var(--enemy)}
+.slot.me input{background:var(--chip);color:var(--muted)}
+.slot.me label{color:var(--accent);font-weight:700}
+.side{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.side.enemy{color:var(--enemy)} .side.ally{color:var(--accent)}
+#allyBox{display:flex;flex-direction:column;gap:8px}
+input[type=text],select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);min-width:0}
+select{width:auto;max-width:100%;font-size:.85rem;padding:7px 10px}
+input:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pin{display:flex;align-items:center;gap:6px;min-width:0}
+.ic{width:36px;height:36px;border-radius:6px;flex:none;background:var(--chip);border:1px solid var(--line);object-fit:cover}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;background:transparent}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--chip)}
+.drop strong{display:block;font-size:.92rem}
+.drop small{color:var(--muted);font-size:.8rem}
+.dropicon{width:40px;height:40px;flex:none;color:var(--accent)}
+.dropicon svg{width:100%;height:100%}
+.drop:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input.confira{border-color:var(--b)!important;box-shadow:0 0 0 2px var(--warn-soft)}
+.ph{width:36px;height:36px;border-radius:6px;flex:none;display:grid;place-items:center;border:1px dashed var(--line);background:var(--chip);color:var(--muted)}
+.ph svg{width:24px;height:24px;display:block}
+.ph.enemy{color:var(--enemy)} .ph.ally{color:var(--accent)}
+.ic.lg{width:52px;height:52px;border-radius:8px}
+.ic.sm{width:24px;height:24px;border-radius:4px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:.8rem;color:var(--muted)}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.go{font-family:var(--display);font-size:1.3rem;letter-spacing:.05em;padding:12px 28px;border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.go:disabled{opacity:.55;cursor:wait}
+.go.small{font-size:1.05rem;padding:8px 18px}
+.ghost{font:inherit;font-size:.85rem;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--fg);cursor:pointer}
+.ghost:disabled{opacity:.55;cursor:wait}
+.linkbtn{font:inherit;font-size:.8rem;background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline;padding:0}
+.linkbtn.danger{color:var(--enemy)}
+.check{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--muted)}
+.status{font-size:.88rem;color:var(--muted)}
+.status.err{color:var(--enemy)}
+.tag{font-family:var(--mono);font-size:.7rem;padding:2px 6px;border-radius:4px;background:var(--chip);color:var(--muted)}
+a.tag{text-decoration:none} a.tag:hover{color:var(--accent)}
+.note{font-size:.8rem;color:var(--muted);margin:0;max-width:70ch}
+.prof-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.prof-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.prof-id{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.prof-id b{font-family:var(--display);font-size:1.5rem;letter-spacing:.02em}
+.prof-id span{color:var(--muted);font-size:.9rem}
+.prof-champs{display:flex;gap:8px;flex-wrap:wrap}
+.pc{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;min-width:118px;font-variant-numeric:tabular-nums}
+.pc>div{display:flex;flex-direction:column}
+.pc b{font-size:.95rem}
+.pc span{font-family:var(--mono);font-size:.72rem;color:var(--muted)}
+.pc .good{color:var(--s)} .pc .bad{color:var(--enemy)}
+.imp{display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--accent);border-radius:10px}
+.imp h3{font-family:var(--display);font-size:1.2rem;margin:0}
+.imp-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.imp-row input{flex:1;min-width:0}
+.summary{font-size:1rem;margin:0;max-width:65ch}
+.picks{display:flex;flex-direction:column;gap:10px}
+.pick{display:grid;grid-template-columns:52px minmax(0,1fr);gap:14px;padding:14px;border:1px solid var(--line);border-radius:10px}
+.tier{font-family:var(--display);font-size:2rem;line-height:1;display:grid;place-items:center;border-radius:8px;height:52px;color:var(--accent-ink)}
+.tier.S{background:var(--s)} .tier.A{background:var(--a)} .tier.B{background:var(--b)}
+.pick-title{display:flex;gap:10px;align-items:center;min-width:0}
+.pick h3{font-family:var(--display);font-size:1.5rem;margin:0;letter-spacing:.02em;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.pick p{margin:4px 0 0}
+.k{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:8px;display:block}
+.stat{font-family:var(--mono);font-size:.75rem;color:var(--muted);font-weight:400}
+.risk,.ptag{font-family:var(--mono);font-size:.7rem;padding:2px 6px;border-radius:4px;border:1px solid currentColor}
+.risk.baixo{color:var(--s)} .risk.medio{color:var(--b)} .risk.alto{color:var(--enemy)}
+.ptag.buff{color:var(--s)} .ptag.nerf{color:var(--enemy)} .ptag.adjust{color:var(--b)}
+.build{display:flex;flex-direction:column;gap:10px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.brow{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:flex-start}
+.bgroup{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bgroup>span{font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px 2px 2px;border:1px solid var(--line);border-radius:6px;font-size:.78rem;background:var(--panel);max-width:100%}
+.chip.txt{padding:2px 8px}
+.chip img{width:24px;height:24px;border-radius:4px;flex:none}
+.chip.key img{width:30px;height:30px}
+.chip.key{font-weight:600}
+.skillprio{margin:0;font-size:.85rem;display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.sk{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border-radius:4px;font-family:var(--mono);font-size:.75rem;font-weight:700}
+.sk.Q{background:#3b6fd6;color:#fff} .sk.W{background:#0e8f8a;color:#fff} .sk.E{background:#b0792a;color:#fff} .sk.R{background:#c2414b;color:#fff}
+.skillwrap{overflow-x:auto;max-width:100%}
+.skillgrid{display:grid;grid-template-columns:26px repeat(var(--n),minmax(20px,1fr));gap:2px;min-width:calc(26px + var(--n) * 22px);font-variant-numeric:tabular-nums}
+.skillgrid .lvl{font-family:var(--mono);font-size:.62rem;color:var(--muted);text-align:center;line-height:20px}
+.skillgrid .lvl.key{line-height:22px;font-size:.72rem;color:#fff}
+.skillgrid .cell{height:22px;border-radius:3px;background:var(--chip);display:grid;place-items:center;font-family:var(--mono);font-size:.7rem;font-weight:700}
+.skillgrid .cell.on{color:#fff}
+.skillgrid .cell.on.Q{background:#3b6fd6} .skillgrid .cell.on.W{background:#0e8f8a} .skillgrid .cell.on.E{background:#b0792a} .skillgrid .cell.on.R{background:#c2414b}
+.evalbox{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:10px;border:1px solid var(--line);border-left-width:5px}
+.evalbox.bom{border-left-color:var(--s)} .evalbox.medio{border-left-color:var(--b)} .evalbox.ruim{border-left-color:var(--enemy)}
+.evaltop{display:flex;gap:12px;align-items:center}
+.evalnum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.evalnum b{font-family:var(--display);font-size:2.6rem;line-height:1}
+.evalbox.bom .evalnum b,.evalbox.bom .evalverd{color:var(--s)}
+.evalbox.medio .evalnum b,.evalbox.medio .evalverd{color:var(--b)}
+.evalbox.ruim .evalnum b,.evalbox.ruim .evalverd{color:var(--enemy)}
+.evalverd{font-family:var(--display);font-size:1.3rem;letter-spacing:.03em}
+.evallist{margin:0;padding-left:18px;font-size:.88rem;display:flex;flex-direction:column;gap:2px}
+.tag.poolbest{background:var(--a);color:#fff}
+.pick.poolcard{border-color:var(--a);border-width:2px;margin-top:10px}
+.poolhead{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+.poolk{color:var(--a)!important;font-weight:700;margin-top:0!important}
+.poolnivel{margin:0!important;font-weight:600}
+.pick.naovale{border-color:var(--enemy);background:var(--enemy-soft);margin-top:10px}
+.tier.X{background:var(--enemy);font-size:1.6rem}
+.nvk{color:var(--enemy)!important;font-weight:700;margin-top:0!important;margin-bottom:4px}
+.nvmotivo{font-weight:600}
+.pick.exocard{border-color:var(--b);border-style:dashed;border-width:2px;margin-top:10px}
+.exok{color:var(--b)!important;font-weight:700;margin-top:0!important}
+.tag.aposta{background:var(--warn-soft);color:var(--fg);border:1px solid var(--b)}
+.tag.pos{background:var(--chip);color:var(--fg)}
+.maisbtn{margin-top:10px;width:100%}
+.maisbox{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.maisbox[hidden]{display:none}
+.ajustes{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font-size:.85rem}
+.ajustes li{display:flex;gap:8px;align-items:baseline}
+.ajustes b{font-family:var(--mono);font-size:.75rem;min-width:40px;text-align:right}
+.ajustes .up b{color:var(--s)} .ajustes .down b{color:var(--enemy)}
+.evalwarn{margin:0;font-size:.88rem;padding:6px 10px;border-radius:6px;background:var(--warn-soft)}
+.src{font-family:var(--mono);font-size:.68rem;color:var(--muted)}
+.src.ok{color:var(--s)} .src.partial{color:var(--enemy)}
+.links{display:flex;gap:12px;margin-top:8px;font-size:.82rem;flex-wrap:wrap}
+.links a{color:var(--accent)}
+.avoid{display:flex;flex-direction:column;gap:6px}
+.avoid div{display:flex;align-items:center;gap:8px;padding:8px 12px;border-left:3px solid var(--enemy);background:var(--enemy-soft);border-radius:0 6px 6px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend b{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:4px;color:var(--accent-ink);font-family:var(--display);font-size:1rem;line-height:1}
+.thinking{display:flex;align-items:center;gap:10px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+.pick.enter{animation:rise .25s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+details.panel>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.panel>summary::-webkit-details-marker{display:none}
+details.panel>summary::after{content:"+";font-family:var(--mono);color:var(--muted)}
+details.panel[open]>summary::after{content:"–"}
+.patch{display:flex;flex-wrap:wrap;gap:6px}
+.pt{font-size:.8rem;padding:3px 9px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pt.buff{color:var(--s);border-color:var(--s)} .pt.nerf{color:var(--enemy);border-color:var(--enemy)} .pt.adjust{color:var(--b);border-color:var(--b)}
+.pt.mine{font-weight:700}
+.pt small{color:var(--muted);font-family:var(--mono);font-size:.68rem}
+.sysgrid{display:flex;flex-direction:column;gap:14px}
+.sysblock{display:flex;flex-direction:column;gap:6px}
+.sysblock h3{margin:0;font-size:.95rem}
+.riotlist{display:flex;flex-direction:column;gap:4px;font-size:.85rem}
+.riotlist div{display:flex;gap:8px;align-items:center}
+@media (max-width:640px){
+  .team{grid-template-columns:1fr 1fr}
+  .row2{grid-template-columns:1fr}
+  .modes{grid-template-columns:1fr}
+  .lanes button{font-size:.9rem}
+  h1{font-size:2rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Counter<span>Pick</span></h1>
+      <p class="sub" id="dataBadge">Carregando dados…</p>
+    </div>
+    <p class="sub">Counters, runas e builds de League of Legends com estatísticas do op.gg e da Riot. Grátis, sem IA.</p>
+    <div class="banner" id="syncBanner" role="status" hidden></div>
+  </header>
+
+  <section class="panel" aria-labelledby="h-prof">
+    <div class="prof-head">
+      <h2 id="h-prof">Perfil</h2>
+      <div class="prof-tools">
+        <label for="profSel" class="sr" hidden>Perfil ativo</label>
+        <select id="profSel" aria-label="Perfil ativo"></select>
+        <button type="button" class="ghost" id="profAdd">+ Adicionar jogador</button>
+      </div>
+    </div>
+    <div class="prof-id">
+      <b id="profName"></b><span id="profRank"></span>
+      <a class="tag" id="profLink" target="_blank" rel="noopener"></a>
+      <button type="button" class="linkbtn" id="profRefresh">Atualizar</button>
+      <button type="button" class="linkbtn danger" id="profDel" hidden>Remover</button>
+    </div>
+    <div class="prof-champs" id="profChamps"></div>
+    <label class="check"><input type="checkbox" id="useProf" checked> Dar preferência aos campeões em que este jogador vai bem</label>
+
+    <div class="imp" id="impBox" hidden>
+      <h3>Adicionar outro jogador</h3>
+      <p class="note">Escreva o Riot ID da pessoa (nome#TAG) ou cole o link do op.gg dela. Com a chave da Riot configurada, o perfil vem direto da Riot (últimas ~40 ranqueadas); sem ela, vem do op.gg. Fica salvo só neste computador.</p>
+      <div class="imp-row">
+        <label for="impId" class="sr" hidden>Link do op.gg ou Riot ID</label>
+        <input type="text" id="impId" placeholder="op.gg/... ou nome#BR1" autocomplete="off" spellcheck="false" aria-label="Link do op.gg ou Riot ID">
+        <button type="button" class="go small" id="impGo">Adicionar</button>
+        <button type="button" class="ghost" id="impCancel">Cancelar</button>
+      </div>
+      <span class="status" id="impStatus" role="status"></span>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-lane">
+    <h2 id="h-lane">1 · Sua rota e o que analisar</h2>
+    <div class="lanes" id="lanes" role="group" aria-label="Rota">
+      <button type="button" data-lane="TOP">Top</button>
+      <button type="button" data-lane="JUNGLE">Jungle</button>
+      <button type="button" data-lane="MID">Mid</button>
+      <button type="button" data-lane="ADC">ADC</button>
+      <button type="button" data-lane="SUPPORT">Suporte</button>
+    </div>
+    <div class="modes" id="modes" role="group" aria-label="O que analisar">
+      <button type="button" data-mode="lane"><b>Só minha lane</b><small>Quem ganha do seu oponente direto</small></button>
+      <button type="button" data-mode="full"><b>Comp inteira</b><small>Seu oponente + o time inimigo todo</small></button>
+      <button type="button" data-mode="draft"><b>Draft</b><small>Seleção em andamento, oponente pode nem ter saído</small></button>
+    </div>
+    <div class="draft" id="draftBox" hidden>
+      <div class="bgroup"><span>Seu lado</span>
+        <div class="seg" id="sideSeg" role="group" aria-label="Lado">
+          <button type="button" data-side="blue">Azul</button>
+          <button type="button" data-side="red">Vermelho</button>
+        </div></div>
+      <div class="bgroup"><span>Sua vez de escolher</span>
+        <div class="seg" id="pickSeg" role="group" aria-label="Ordem do pick">
+          <button type="button" data-pick="1">1º</button>
+          <button type="button" data-pick="2">2º</button>
+          <button type="button" data-pick="3">3º</button>
+          <button type="button" data-pick="4">4º</button>
+          <button type="button" data-pick="5">5º</button>
+        </div></div>
+      <p class="draft-info" id="draftInfo"></p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-teams">
+    <h2 id="h-teams">2 · Times</h2>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Enviar print da seleção de campeões ou do Tab">
+      <div class="dropicon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10.5" r="2" fill="currentColor"/><path d="M4 18l5-5 3 3 3-4 5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+      <div>
+        <strong id="dropTitle">Cole o print aqui (Ctrl+V), arraste ou clique para escolher</strong>
+        <small id="dropHint">Print da tela de seleção de campeões (o placar do Tab ainda está em teste). Lido no seu PC, em menos de 1 segundo; o print não é guardado. Ou digite os nomes abaixo.</small>
+      </div>
+      <input type="file" id="printFile" accept="image/png,image/jpeg,image/webp" hidden>
+    </div>
+    <div class="imp-row" id="printTools" hidden>
+      <button type="button" class="ghost" id="printSwap">Inverter times</button>
+      <span class="status" id="printStatus" role="status"></span>
+    </div>
+    <span class="side enemy">Inimigos</span>
+    <div class="team" id="team"></div>
+    <p class="note" id="teamNote"></p>
+    <label class="check"><input type="checkbox" id="useAllies"> Também informar o meu time</label>
+    <div id="allyBox" hidden>
+      <span class="side ally">Aliados</span>
+      <div class="team" id="allyTeam"></div>
+      <p class="note">Com o seu time preenchido, o sistema equilibra dano físico e mágico na recomendação.</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-mine">
+    <h2 id="h-mine">3 · Seu campeão</h2>
+    <div class="row2">
+      <div class="field"><label for="mine">Minha escolha: chance de vitória, runas e build (first pick ou já travado)</label>
+        <div class="pin"><img class="ic" id="mineIc" alt=""><input type="text" id="mine" list="champs" autocomplete="off" spellcheck="false" placeholder="Vazio = me recomende campeões"></div></div>
+      <div class="field"><label for="pool">Campeões que você joga (vêm do perfil, pode editar)</label>
+        <input type="text" id="pool" placeholder="ex.: Ezreal, Caitlyn, Jinx"></div>
+    </div>
+  </section>
+
+  <div class="actions">
+    <button class="go" id="go" type="button">Recomendar counter</button>
+    <button class="ghost" id="clear" type="button">Limpar</button>
+    <span class="status" id="status" role="status"></span>
+  </div>
+
+  <section class="panel" id="result" aria-labelledby="h-res">
+    <h2 id="h-res">Recomendação</h2>
+    <div id="resBody">
+      <p class="summary">Preencha os campeões (o campo completa o nome sozinho) e clique em <b>Recomendar counter</b>. O time inimigo já vem com um exemplo para você ver como funciona.</p>
+    </div>
+    <div class="legend" aria-label="Legenda">
+      <span><b class="tier S">S</b>melhor escolha agora</span>
+      <span><b class="tier A">A</b>boa escolha</span>
+      <span><b class="tier B">B</b>dá para jogar</span>
+      <span><b class="tier B" style="background:transparent;border:2px dashed var(--b);color:var(--b)">◆</b>exótico: quase ninguém joga nessa rota, mas encaixa</span>
+      <span><b class="tier X" style="font-size:1rem">✕</b>não use nesta partida</span>
+    </div>
+    <p class="note">De onde vem: taxa de vitória de cada confronto de rota, força de cada campeão no patch e builds e runas mais jogadas, tudo do op.gg oficial, somado às partidas do servidor BR (todos os elos) coletadas da Riot. Com os aliados preenchidos, entra também a sinergia real entre os campeões. Cada número no card diz em quantas partidas se baseia. Amostra pequena (menos de 1.000 partidas) aparece marcada.</p>
+  </section>
+
+  <details class="panel" id="patchPanel" hidden>
+    <summary><h2>Novidades do patch</h2><span class="tag" id="patchTag"></span></summary>
+    <p class="note" id="patchIntro"></p>
+    <div class="patch" id="patchList"></div>
+    <p class="note" id="patchItems"></p>
+  </details>
+
+  <details class="panel" id="sysPanel">
+    <summary><h2>Dados do sistema</h2><span class="tag" id="sysTag"></span></summary>
+    <div class="sysgrid">
+      <div class="sysblock">
+        <h3>Estatísticas do op.gg</h3>
+        <p class="note" id="dataState" role="status">Carregando…</p>
+        <div class="imp-row"><button type="button" class="ghost" id="dataSync">Atualizar agora</button></div>
+        <p class="note">Atualiza sozinho quando sai patch novo (leva uns 10 minutos, e dá para usar enquanto isso).</p>
+      </div>
+      <div class="sysblock">
+        <h3>Partidas da Riot (opcional)</h3>
+        <p class="note" id="riotState" role="status">Carregando…</p>
+        <div class="imp-row">
+          <button type="button" class="ghost" id="riotTest">Testar conexão</button>
+          <label for="riotQtd" hidden>Quantas partidas</label>
+          <select id="riotQtd" aria-label="Quantas partidas coletar">
+            <option value="300">300 partidas (~12 min)</option>
+            <option value="1000">1.000 partidas (~40 min)</option>
+            <option value="3000">3.000 partidas (~2 h)</option>
+            <option value="5000">5.000 partidas (~3 h 30)</option>
+          </select>
+          <button type="button" class="ghost" id="riotCollect">Coletar</button>
+          <button type="button" class="ghost" id="riotStop" hidden>Parar coleta</button>
+        </div>
+        <div class="riotlist" id="riotOut"></div>
+        <p class="note">Soma partidas recentes do servidor BR, <b>de todos os elos</b> (Ferro ao Desafiante, em rodízio), aos números do op.gg. Com alguns milhares de partidas passa a valer o "seu campeão contra o time inimigo inteiro". Pode usar o sistema enquanto coleta. Usa a chave pessoal da Riot do arquivo .env (não expira).</p>
+      </div>
+    </div>
+  </details>
+</div>
+
+<datalist id="champs"></datalist>
+
+<footer style="max-width:1100px;margin:28px auto 18px;padding:0 16px;font-size:.75rem;opacity:.65;line-height:1.5">CounterPick isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</footer>
+<script src="app.js"></script>
+</body>
+</html>

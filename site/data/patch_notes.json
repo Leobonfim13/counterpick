@@ -1,0 +1,38 @@
+{
+  "patch": "26.23",
+  "url": "https://www.leagueoflegends.com/pt-br/news/game-updates/league-of-legends-patch-26-23-notes/",
+  "date": "17/11/2026",
+  "changes": [
+    {"c": "Annie", "p": "26.23", "t": "buff", "d": "R: Tibbers com mais vida (escala com vida adicional), aura e ataques mais fortes"},
+    {"c": "Azir", "p": "26.23", "t": "buff", "d": "Alcance de ataque 525→550; W ao contato 50%→67%"},
+    {"c": "Bard", "p": "26.23", "t": "buff", "d": "Q: dano base maior e PdH 80%→100%"},
+    {"c": "Ezreal", "p": "26.23", "t": "buff", "d": "W: 115% DdA adicional/100% PdH; R: 350/600/850 de dano (era 350/550/750), escalas maiores"},
+    {"c": "Galio", "p": "26.23", "t": "buff", "d": "W: escudo 8-20% da vida máxima (era 7,5-13,5%)"},
+    {"c": "Gnar", "p": "26.23", "t": "buff", "d": "Q: +10% de escala de DdA (mini e mega)"},
+    {"c": "K'Sante", "p": "26.23", "t": "buff", "d": "W: custo 45 de mana fixo e mais dano base"},
+    {"c": "LeBlanc", "p": "26.23", "t": "nerf", "d": "Q: PdH 40%→35%"},
+    {"c": "Master Yi", "p": "26.23", "t": "nerf", "d": "Q: escala de DdA 70%→60% (afeta build de crítico)"},
+    {"c": "Mel", "p": "26.23", "t": "buff", "d": "Q e W mais fortes (após ajuste parcial na 26.22)"},
+    {"c": "Syndra", "p": "26.23", "t": "nerf", "d": "E: mana 50→60 e recarga maior no início"},
+    {"c": "Vi", "p": "26.23", "t": "buff", "d": "E: mais dano base"},
+    {"c": "Aurelion Sol", "p": "26.22", "t": "buff", "d": "E: mais dano e escala de PdH"},
+    {"c": "Corki", "p": "26.22", "t": "buff", "d": "R: mais dano"},
+    {"c": "Kayle", "p": "26.22", "t": "buff", "d": "Q e R com recarga menor"},
+    {"c": "Locke", "p": "26.22", "t": "nerf", "d": "Q menos dano, W dura menos"},
+    {"c": "Maokai", "p": "26.22", "t": "buff", "d": "Q: mais dano por vida máxima (top e selva)"},
+    {"c": "Mel", "p": "26.22", "t": "adjust", "d": "Ajuste parcial: menos força cedo, mais escalamento; W agora destrói projéteis"},
+    {"c": "Naafiri", "p": "26.22", "t": "buff", "d": "Q cura mais, W dá mais DdA"},
+    {"c": "Rumble", "p": "26.22", "t": "buff", "d": "R: mais escala de PdH"},
+    {"c": "Shen", "p": "26.22", "t": "buff", "d": "Q: mais dano a monstros (selva)"},
+    {"c": "Smolder", "p": "26.22", "t": "buff", "d": "W: mais dano base"},
+    {"c": "Thresh", "p": "26.22", "t": "nerf", "d": "DdA base 56→54; R: menos dano"},
+    {"c": "Viktor", "p": "26.22", "t": "buff", "d": "Mais vida por nível; R escala melhor"},
+    {"c": "Yasuo", "p": "26.22", "t": "nerf", "d": "Q: 105%→100% de DdA"},
+    {"c": "Zaahen", "p": "26.22", "t": "buff", "d": "Q com recarga menor no início"}
+  ],
+  "items": [
+    "26.23: Cicloespada Voltaica enfraquecida (dano de ativação menor)",
+    "26.22: Arco de Doran enfraquecido (DdA 8→7), Lâmina de Doran fica mais atrativa para atiradores",
+    "26.22: Armadura Sangrenta do Suserano fortalecida (DdA 30→40)"
+  ]
+}
